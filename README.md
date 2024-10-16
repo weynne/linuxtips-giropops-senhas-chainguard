@@ -30,19 +30,33 @@ docker scout recommendations SUA_IMAGEM:1.0
 ##### OBS: É necessario logar utilizando o docker login para utilizar o docker scout.
 3. Otimizando a imagem utilizando Distroless:
 >FROM cgr.dev/chainguard/python:latest-dev AS dev-builder
-WORKDIR /app
-RUN python -m venv venv
-ENV PATH="/app/venv/bin:$PATH"
-COPY ./giropops-senhas/requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
-
+>
+>WORKDIR /app
+>
+>RUN python -m venv venv
+>
+>ENV PATH="/app/venv/bin:$PATH"
+>
+>COPY ./giropops-senhas/requirements.txt requirements.txt
+>
+>RUN pip install --no-cache-dir -r requirements.txt
+>
 >FROM cgr.dev/chainguard/python:latest
-WORKDIR /app
-COPY --from=dev-builder /app/venv /app/venv
-COPY ./giropops-senhas/app.py . 
-COPY ./giropops-senhas/templates/ templates/
-COPY ./giropops-senhas/static/ static/
-EXPOSE 5000
-ENV PATH="/app/venv/bin:$PATH"
-ENTRYPOINT [ "flask" ]
-CMD ["run", "--host=0.0.0.0"]
+>
+>WORKDIR /app
+>
+>COPY --from=dev-builder /app/venv /app/venv
+>
+>COPY ./giropops-senhas/app.py . 
+>
+>COPY ./giropops-senhas/templates/ templates/
+>
+>COPY ./giropops-senhas/static/ static/
+>
+>EXPOSE 5000
+>
+>ENV PATH="/app/venv/bin:$PATH"
+>
+>ENTRYPOINT [ "flask" ]
+>
+>CMD ["run", "--host=0.0.0.0"]
