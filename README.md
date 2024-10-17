@@ -14,6 +14,8 @@ Este desafio consiste em:
 
 ## Resolução
 
+###### Obs: Antes de executar os comandos do Trivy, Docker Scout e enviar a imagem para o Docker Hub, certifique-se de estar logado no Docker Hub utilizando o comando `docker login`.
+
 1. Instalando o [Trivy](https://aquasecurity.github.io/trivy/v0.56/getting-started/installation/)
 - Utilizando o Trivy para verificar as vulnerabilidades(CVES):
 ```
@@ -27,8 +29,25 @@ docker scout cves SUA_IMAGEM:1.0
 ```
 docker scout recommendations SUA_IMAGEM:1.0
 ```
-##### OBS: É necessario logar utilizando o docker login para utilizar o docker scout.
 3. Otimizando a imagem utilizando Distroless:
+
+### Antes da otimização:
+###### Tamanho da imagem: **136MB** 
+```
+FROM python:3-slim
+WORKDIR /app
+COPY ./giropops-senhas/requirements.txt requirements.txt
+COPY ./giropops-senhas/app.py . 
+COPY ./giropops-senhas/templates/ templates/
+COPY ./giropops-senhas/static/ static/
+RUN pip install --no-cache-dir -r requirements.txt
+EXPOSE 5000
+CMD ["flask", "run", "--host=0.0.0.0"]
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+  CMD ["python", "-c", "import http.client; import sys; conn = http.client.HTTPConnection('localhost', 5000); conn.request('GET', '/'); res = conn.getresponse(); sys.exit(1) if res.status != 200 else sys.exit(0)"]
+```
+### Depois da otimização:
+###### Tamanho da imagem: **83MB** 
 ```
 FROM cgr.dev/chainguard/python:latest-dev AS dev-builder
 WORKDIR /app
@@ -50,3 +69,14 @@ CMD ["run", "--host=0.0.0.0"]
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
   CMD ["python", "-c", "import http.client; import sys; conn = http.client.HTTPConnection('localhost', 5000); conn.request('GET', '/'); res = conn.getresponse(); sys.exit(1) if res.status != 200 else sys.exit(0)"]
 ```
+4. Instalando o [Hadolint](https://github.com/hadolint/hadolint)
+```
+sudo mv hadolint-v2.12.0-linux-x86_64 /usr/local/bin/hadolint
+sudo chmod +x /usr/local/bin/hadolint
+```
+- Utilizando o Hadolint: 
+```
+hadolint Dockerfile
+```
+###### Obs: A única melhoria sugerida para o Dockerfile otimizado com Distroless é a DL3007, que informa sobre o perigo da utilização de imagens latest. 
+###### Como a Distroless é da chainguard será necessário entrar em contato com eles para solicitar uma versão específica e só assim poder tirar o warning DL3007.
