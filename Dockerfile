@@ -14,4 +14,6 @@ COPY ./giropops-senhas/static/ static/
 EXPOSE 5000
 ENV PATH="/app/venv/bin:$PATH"
 ENTRYPOINT [ "flask" ]
-CMD ["run", "--host=0.0.0.0"]
+CMD [ "run", "--host=0.0.0.0" ]
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+  CMD ["python", "-c", "import http.client; import sys; conn = http.client.HTTPConnection('localhost', 5000); conn.request('GET', '/'); res = conn.getresponse(); sys.exit(1) if res.status != 200 else sys.exit(0)"]
