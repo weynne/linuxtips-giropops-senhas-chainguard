@@ -8,9 +8,9 @@ Este desafio consiste em:
 2. Utilize o Docker Scout para verificar as vulnerabilidades(CVES) da sua imagem de container.
 3. Utilize uma imagem Distroless para otimizar sua imagem de container.
 4. Utilize o Hadolint para saber se o Dockerfile está utilizando as melhores práticas. 
-5. Assine sua imagem utilizando o Cosing.
-6. Envie a imagem para o Docker Hub.
-7. Utilize novamente o Trivy e Docker Scout para verificar as vulnerabilidades(CVES) na sua imagem otimizada com Distroless.
+5. Envie a imagem para o Docker Hub. 
+6. Assine sua imagem utilizando o Cosing e envie novamente para o Docker Hub.
+7. Suba a aplicação.
 
 ## Resolução
 
@@ -78,5 +78,39 @@ sudo chmod +x /usr/local/bin/hadolint
 ```
 hadolint Dockerfile
 ```
-###### Obs: A única melhoria sugerida para o Dockerfile otimizado com Distroless é a DL3007, que informa sobre o perigo da utilização de imagens latest. 
-###### Como a Distroless é da chainguard será necessário entrar em contato com eles para solicitar uma versão específica e só assim poder tirar o warning DL3007.
+###### Obs: A única melhoria sugerida para o Dockerfile otimizado com Distroless é a DL3007, que informa sobre o perigo da utilização de imagens latest. Como a Distroless é da chainguard é necessário entrar em contato com eles para solicitar uma versão específica e só assim poder tirar o warning DL3007.
+5. Colocando a imagem no Docker Hub:
+```
+docker push SUA_IMAGEM:1.0
+```
+6. Instalando o [Cosign](https://docs.sigstore.dev/cosign/system_config/installation/)
+- Criando as chaves privada e pública no Cosign:
+```
+cosign generate-key-par 
+```
+- Assinando a imagem: 
+```
+cosign sign --key SUA_CHAVE_PRIVADA SUA_IMAGEM:1.0
+```
+- Enviando novamente para o Docker Hub:
+```
+docker push SUA_IMAGEM:1.0
+```
+- Validando a imagem:
+```
+cosign verify --key SUA_CHAVE_PUBLICA SUA_IMAGEM:1.0
+```
+7. Subindo a aplicação: 
+- Crie uma network para a comunicação entre o container da App e o container do Redis
+```
+docker network create -d bridge net-giropops-senhas
+```
+- Crie um container utilizando a network que acabamos de criar e utilize a imagem do Redis
+```
+docker container run -d -p 6379:6379 --network -net-giropops-senhas --name redis-chainguad cgr.dev/chainguard/redis
+```
+- Crie um container utilizando a imagem SEU_USUARIO_NO_DOCKER_HUB/linuxtips-giropops-senhas-chainguard:1.0
+```
+docker container run -d -p 5000:5000 --network net-giropops-senhas --env REDIS_HOST=redis-chainguard --name giropops-senhas-chainguard SEU_USUARIO_NO_DOCKER_HUB/linuxtips-giropops-senhas-chainguard:1.0
+```
+- Por fim acesse o seu navegador utilizando a url: **localhost:5000**
