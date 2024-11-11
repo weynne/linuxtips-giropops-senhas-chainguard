@@ -92,10 +92,6 @@ cosign generate-key-par
 ```
 cosign sign --key SUA_CHAVE_PRIVADA SUA_IMAGEM:1.0
 ```
-- Enviando novamente para o Docker Hub:
-```
-docker push SUA_IMAGEM:1.0
-```
 - Validando a imagem:
 ```
 cosign verify --key SUA_CHAVE_PUBLICA SUA_IMAGEM:1.0
